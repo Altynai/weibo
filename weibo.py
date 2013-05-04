@@ -323,9 +323,30 @@ class weibo(object):
 			page += 1
 		return followslist
 
+
+	def tagstring(self, html, tagname, classname):
+		"""
+		在html中，从类似<tagname class=classname>文本</tagname>
+		的tag中提取'文本',tag可能有多个，只提取文本，并合并
+		return [string1, string2....]
+		"""
+		strings = []
+		for tag in BeautifulSoup(html).find_all(tagname, class_ = classname):
+			strings.append(''.join([str(x) for x in tag.stripped_strings]))
+		return strings
+
+
 	def news(self, page = 1):
 		"""
 		获得当前登录用户的第page页新鲜事
+		return json格式的新鲜事，如下：
+		[
+			{'nickname0' : nickname0, 'text0' : text0},						<-- 原创微博
+
+			{'nickname0' : nickname0, 'text0' : text0,
+			 'nickname1' : nickname1, 'text1' : text1},						<-- 原创微博
+			...
+		]
 
 		"""
 		request = urllib2.Request('http://weibo.com/u/%s?page=%d' % (self.uid, page))
@@ -341,11 +362,32 @@ class weibo(object):
 		# 新鲜事主体
 		html = json.loads(newscontent).get('html')
 		soup = BeautifulSoup(html)
-		with open('temp.html', 'w') as fout:
-			fout.write( soup.prettify() + '\n')
-			# pass
-			# for div in divlist:
-				# fout.write(div + "\n")
+
+		sys.stdout = open('temp.html', 'w')
+		jsondata = []
+		for new in soup.find_all('div', class_ = 'WB_feed_type SW_fun S_line2'):
+			newcontent = str(new)
+			# 原创微博
+			if newcontent.find('isforward') == -1:
+				nickname0 = self.tagstring(newcontent, 'div', 'WB_info')[0]
+				text0 = self.tagstring(newcontent, 'div', 'WB_text')[0]
+				d = dict()
+				d.setdefault('nickname0', nickname0)
+				d.setdefault('text0', text0)
+				jsondata.append(d)
+			# 转发微博
+			else:
+				nickname = []
+				nickname.append(self.tagstring(newcontent, 'div', 'WB_info')[0])
+				nickname.append(self.tagstring(newcontent, 'div', 'WB_info')[0])
+				text = self.tagstring(newcontent, 'div', 'WB_text')
+				d = dict()
+				for i in xrange(2):
+					d.setdefault('nickname%d' % i, nickname[i])
+					d.setdefault('text%d' % i, text[i])
+				jsondata.append(d)
+		print json.dumps(jsondata, indent = 4, separators = (',', ':'))
+
 
 #----------------------测试部分----------------------#
 def testmyfans(wb):
