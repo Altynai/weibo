@@ -344,7 +344,7 @@ class weibo(object):
 			{'nickname0' : nickname0, 'text0' : text0},						<-- 原创微博
 
 			{'nickname0' : nickname0, 'text0' : text0,
-			 'nickname1' : nickname1, 'text1' : text1},						<-- 原创微博
+			 'nickname1' : nickname1, 'text1' : text1},						<-- 转发微博
 			...
 		]
 
@@ -363,7 +363,7 @@ class weibo(object):
 		html = json.loads(newscontent).get('html')
 		soup = BeautifulSoup(html)
 
-		sys.stdout = open('temp.html', 'w')
+		# sys.stdout = open('temp.html', 'w')
 		jsondata = []
 		for new in soup.find_all('div', class_ = 'WB_feed_type SW_fun S_line2'):
 			newcontent = str(new)
@@ -373,13 +373,12 @@ class weibo(object):
 				text0 = self.tagstring(newcontent, 'div', 'WB_text')[0]
 				d = dict()
 				d.setdefault('nickname0', nickname0)
+				print 
 				d.setdefault('text0', text0)
 				jsondata.append(d)
 			# 转发微博
 			else:
-				nickname = []
-				nickname.append(self.tagstring(newcontent, 'div', 'WB_info')[0])
-				nickname.append(self.tagstring(newcontent, 'div', 'WB_info')[0])
+				nickname = self.tagstring(newcontent, 'div', 'WB_info')
 				text = self.tagstring(newcontent, 'div', 'WB_text')
 				d = dict()
 				for i in xrange(2):
