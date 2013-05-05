@@ -363,7 +363,6 @@ class weibo(object):
 		html = json.loads(newscontent).get('html')
 		soup = BeautifulSoup(html)
 
-		# sys.stdout = open('temp.html', 'w')
 		jsondata = []
 		for new in soup.find_all('div', class_ = 'WB_feed_type SW_fun S_line2'):
 			newcontent = str(new)
@@ -373,7 +372,6 @@ class weibo(object):
 				text0 = self.tagstring(newcontent, 'div', 'WB_text')[0]
 				d = dict()
 				d.setdefault('nickname0', nickname0)
-				print 
 				d.setdefault('text0', text0)
 				jsondata.append(d)
 			# 转发微博
@@ -385,7 +383,7 @@ class weibo(object):
 					d.setdefault('nickname%d' % i, nickname[i])
 					d.setdefault('text%d' % i, text[i])
 				jsondata.append(d)
-		print json.dumps(jsondata, indent = 4, separators = (',', ':'))
+		return json.dumps(jsondata, indent = 4, ensure_ascii = False, separators = (',', ':'))
 
 
 #----------------------测试部分----------------------#
@@ -414,7 +412,8 @@ def testotherfollows(wb, uid):
 		print follow[0], follow[1]
 
 def testnews(wb, page = 1):
-	wb.news(page)
+	sys.stdout = open('news.txt', 'w')
+	print wb.news(page)
 
 def test():
 	email = 'xxx@qq.com'
